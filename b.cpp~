@@ -1,0 +1,281 @@
+#include <SDL/SDL.h>
+#include <iostream>
+#include <stdlib.h> 
+#include <cmath>
+
+int map[102][102];
+int click[102][102];
+//int checkx[100];
+//int checky[100];
+int check[102][102];
+int  h , w , bomb ;
+bool won = false ;
+SDL_Surface *screen ;
+using namespace std;
+
+void dor ( int w , int h , int map[][102] )
+{
+	for ( int i = 0 ; i <= w+1 ; i++ )
+	{
+		for ( int j = 0 ; j <= h+1 ; j++ )
+		{
+			if ( i == 0 ) map[i][j] = 99 ;
+			if ( i == w+2 ) map[i][j] = 99 ;
+			if ( i == 0 ) map[i][j] = 99 ;
+			if ( i == h+2 ) map[i][j] = 99 ;
+		}
+	}	
+}
+
+void clearall(int map[][102] , int w , int h )
+{
+	for ( int i = 0 ; i <= w+1 ; i++ )
+	{
+		for ( int j = 0 ; j <= h+1 ; j++ )
+		{
+			map [i][j] = 0 ;
+			click [i][j] = 0 ;
+		}
+	}
+	return ;	
+}
+
+void inputmap ( int map[][102] , int bomb , int w , int h )
+{
+	for ( int k = 1 ; k <= bomb ; k++ )
+	{
+		int x ;
+		int y ;
+		do
+		{
+			x = rand() % w + 1 ;
+			y = rand() % h + 1 ;
+		}
+		while ( map[x][y] == 9 );
+		map[x][y] = 9 ;
+		//checkx[k-1] = x ;
+		//checky[k-1] = y ;
+		for ( int i = -1 ; i <= 1 ; i++ )
+		{
+			for ( int j = -1 ; j <= 1 ; j++ )
+			{
+				if (map[x+i][y+j] != 9 ) map[x+i][y+j]++ ; 
+			}
+		}
+	}
+}
+
+void Winner ( int click[][102] , int w , int h , int bomb )
+{
+	int n ;
+	for ( int i = 1 ; i <= w+1 ; i++ )
+	{
+		for ( int j = 1 ; j <= h+1 ; j++ )
+		{
+			if ( click[i][j] == 1 ) n++ ;
+		}
+	}
+	if ( (w*h)-n == bomb ) 
+	{
+		won = true ;
+	}
+	n = 0 ;		
+}
+
+void o ( int x , int y , int map[][102] , int click[][102] )
+{
+	char s[100] ;
+	SDL_Surface *bmp ;
+	if ( map[x][y] == 0 ) 
+	{
+		for ( int i = -1 ; i <= 1 ; i++ )
+		{
+			for ( int j = -1 ; j <= 1 ; j++ )
+			{
+				click[x+i][y+j] = 1 ;
+				SDL_Rect rect ; 
+				rect.x = (i+x) * 20 ;
+				rect.y = (j+y) * 20 ;
+				rect.w = 20 ;
+				rect.h = 20 ;
+				sprintf( s , "%d.bmp" , map[i+x][j+y] );
+				bmp = SDL_LoadBMP(s);
+				SDL_BlitSurface( bmp , NULL , screen , &rect );
+				if ( map[x+i][y+j] == 0 ) o ( x+i , y+j , map , click );
+			}
+		}
+	}
+	SDL_Flip(screen);
+}
+
+void draw ( int map[][102] , int click[][102] , int w , int h )
+{
+	char s[100] ;
+	for ( int i = 1 ; i <= w+1 ; i++ )
+	{
+		for ( int j = 1 ; j <= h+1 ; j++ )
+		{
+			if ( click[i][j] == 1 )
+			{
+				SDL_Surface *bmp ;
+				SDL_Rect rect ; 
+				rect.x = (i) * 20 ;
+				rect.y = (j) * 20 ;
+				rect.w = 20 ;
+				rect.h = 20 ;
+				sprintf( s , "%d.bmp" , map[i][j] );
+				bmp = SDL_LoadBMP(s);
+				SDL_BlitSurface( bmp , NULL , screen , &rect );
+				SDL_Flip(screen);
+			}
+		}
+	}	
+} 
+ 
+int main()
+{
+
+cout << "w  : " ;
+cin >> w ;
+cout << "h  : " ;
+cin >> h ;
+cout << "b  : " ;
+cin >> bomb ; 
+	
+srand( time(NULL) );
+SDL_Init(SDL_INIT_EVERYTHING);
+
+SDL_Surface *bmp ; 
+screen = SDL_SetVideoMode(w*20,h*20,32,SDL_SWSURFACE);
+unsigned char * data = (unsigned char *) screen -> pixels ;
+SDL_Event e ;
+SDL_Rect rect ;
+
+	
+	bool finish = false ;
+	int x , y ;
+	char s[100];
+	int picturename ;
+
+	
+	clearall ( map , w , h );
+	dor ( w , h , map );
+	inputmap ( map , bomb , w , h );
+
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+	for ( int i = 0 ; i <= w ; i++ )
+	{
+		for ( int j = 0 ; j <= h ; j++ )
+	  	{		
+			rect.x = i * 20 ;
+			rect.y = j * 20 ;
+			rect.w = 20 ;
+			rect.h = 20 ;
+			sprintf( s , "%d.bmp" , 10 );
+			bmp = SDL_LoadBMP(s);
+			SDL_BlitSurface( bmp , NULL , screen , &rect );
+		}
+	}
+	SDL_Flip(screen);
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+	
+
+
+	while ( finish == false )
+	{
+		if (SDL_PollEvent( &e ))  if ( e.type == SDL_QUIT)  finish = true ;		
+
+		if ( e.type == SDL_MOUSEBUTTONDOWN )
+		{
+		//////////
+			SDL_GetMouseState( &x , &y);
+			x /= 20 ;
+			y /= 20 ;
+			rect.x = x * 20 ;
+			rect.y = y * 20;
+			rect.w = 20 ;
+			rect.h = 20 ;
+			x++ ;
+			y++ ;
+		//////////
+			if ( click[x][y] != 1 )
+			{
+				click[x][y] = 1 ;
+				picturename = map[x][y];
+				sprintf ( s , "%d.bmp" , picturename );
+				bmp = SDL_LoadBMP(s);
+				SDL_BlitSurface( bmp , NULL , screen , &rect );
+				SDL_Flip(screen);	
+			}
+		//		if ( map[x][y] == 0 ) o ( x , y , map , click ) ;
+		//////////
+			if ( map[x][y] == 9 ) 
+			{	
+				finish = true ;
+				map[x][y] = 30 ;
+				cout << "You lost" << endl ;
+			} 
+		//////////
+			Winner( click , w , h , bomb ); 
+			if ( won == true ) 
+			{	
+				finish = true ;				
+				cout << "You won" << endl ;
+			}
+			//draw ( map , click , w , h );
+		//////////
+			if ( finish == true )
+			{
+				for ( int i = 0 ; i <= w ; i++ )
+				{
+					for ( int j = 0 ; j <= h ; j++ )
+	  				{	
+						click[i][j] = 1 ;
+						rect.x = i * 20 ;
+						rect.y = j * 20;
+						if ( won == true ) if ( map[i+1][j+1] == 9 ) map[i+1][j+1] = 20 ;
+						picturename = map[i+1][j+1];
+						sprintf ( s , "%d.bmp" , picturename );
+						bmp = SDL_LoadBMP(s);
+						SDL_BlitSurface( bmp , NULL , screen , &rect );
+						SDL_Flip(screen);		
+					}
+				}
+				//draw ( map , click , w , h );
+			}
+		//////////
+		}
+		
+	}
+	SDL_Delay(2000);
+	return 0 ;	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
